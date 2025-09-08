@@ -8,6 +8,7 @@ The molecular graph of Valsartan is represented with vertices v1, v2, ..., v32 a
 Edge set := {"v10v11", "v11v12", "v11v21", "v12v13", "v13v14", "v14v15", "v15v16", "v17v12", "v1v18", "v1v2", "v20v19", "v20v9", "v21v22", "v21v25", 
 "v22v23", "v22v24", "v25v26", "v25v27", "v28v29", "v28v32", "v29v30", "v2v3", "v30v31", "v31v32", "v3v4", "v4v28", "v4v5", "v5v18", "v5v6", "v6v19", 
 "v6v7", "v7v8", "v8v9", "v9v10"}
+
 **Methodology**
 1.Determine the eccentricity of each vertex.
 
@@ -34,6 +35,8 @@ Edge set := {"v10v11", "v11v12", "v11v21", "v12v13", "v13v14", "v14v15", "v15v16
 
 7. Albertson Eccentric Index (ABL^e)
 
+   
+
 **Molecular Properties Predicted**
 1.Molecular Weight (MW)
 
@@ -52,6 +55,7 @@ Edge set := {"v10v11", "v11v12", "v11v21", "v12v13", "v13v14", "v14v15", "v15v16
 8.Molar Volume (MV)
 
 **Code Structure**
+
 The code consists of two main sections:
 
 1. Topological index calculation for Valsartan
@@ -68,9 +72,11 @@ The code consists of two main sections:
 4.Execute the code to generate Table 33 results
 
 **Verification**
+
 Results should match Table 33 in the manuscript within rounding differences.
 
 **Application to Other CAD Drugs**
+
 1.To predict properties for other coronary artery disease drugs:
 
 2. Calculate topological indices for your CAD drug using graph theory methods
@@ -184,7 +190,7 @@ for j to nops(index_names) do
     idx_name := index_names[j];
     printf("%s: %.6f\n", idx_name, index_values[idx_name]);
 end do;
-
+By using the results of the above code, we proceed as follows:
 restart;
 with(LinearAlgebra);
 with(ArrayTools);
