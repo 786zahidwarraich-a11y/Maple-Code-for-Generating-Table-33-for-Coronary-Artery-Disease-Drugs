@@ -1,0 +1,196 @@
+# Maple Code for Generating Table 33: Experimental vs. Predicted Molecular Properties of the Drug Valsartan Using Topological Indices and Regression Models.
+
+#This code allows us to analyze the molecular properties of Valsartan by utilizing topological indices and regression models. The regression models were 
+#derived from statistical analyses of molecular descriptors and were validated against experimental data. 
+#To begin, we label the molecular graph of Valsartan with vertices v1, v2, ..., v32. Subsequently, the edge set will be defined as follows:
+#Edge set := {"v10v11", "v11v12", "v11v21", "v12v13", "v13v14", "v14v15", "v15v16", "v17v12", "v1v18", "v1v2", "v20v19", "v20v9", "v21v22", "v21v25", "v22v23", "v22v24", "v25v26", "v25v27", "v28v29", "v28v32", "v29v30", "v2v3", "v30v31", "v31v32", "v3v4", "v4v28", "v4v5", "v5v18", "v5v6", "v6v19", "v6v7", "v7v8", "v8v9", "v9v10"}.
+# Next, we determine the eccentricity of each vertex and create edge partitions based on the eccentricities of the edge's endpoints. Using this edge partitioning, we proceed as follows.
+
+restart;
+
+# Define edge partitions based on eccentricities of end vertices of edges and their corresponding frequencies of Valsartan
+edge_table := table([
+    [15,14] = [3],
+    [15,15] = [1],
+    [14,13] = [5],
+    [13,12] = [8],
+    [12,11] = [6],
+    [11,10] = [3],
+    [10,9] = [3],
+    [9,8] = [3],
+    [8,8] = [2]
+]);
+
+# Initialize index values for Valsartan
+index_values := table([
+    "M1^e" = 0.0,
+    "M2^e" = 0.0,
+    "GA^e" = 0.0,
+    "ABC^e" = 0.0,
+    "χ^e" = 0.0,
+    "IST^e" = 0.0,
+    "ABL^e" = 0.0
+]);
+
+# Get all edges from the table - convert to proper format
+edges := [indices(edge_table)];
+# Flatten the edges if they are nested
+edges := map(edge -> if type(edge, list) and nops(edge) = 1 then edge[1] else edge end if, edges);
+
+# Compute all indices for Valsartan only
+for i from 1 to nops(edges) do
+    current_edge := edges[i];
+    r := current_edge[1];
+    t := current_edge[2];
+    freqs := edge_table[current_edge];
+    
+    # Calculate weights for each index
+    m1_weight := r + t;
+    m2_weight := r * t;
+    
+    if (r + t) <> 0 then
+        ga_weight := (2 * sqrt(r * t)) / (r + t);
+    else
+        ga_weight := 0;
+    end if;
+    
+    if (r * t) <> 0 then
+        abc_weight := sqrt((r + t - 2) / (r * t));
+    else
+        abc_weight := 0;
+    end if;
+    
+    if (r + t) <> 0 then
+        chi_weight := 1 / sqrt(r + t);
+    else
+        chi_weight := 0;
+    end if;
+    
+    if (r + t) <> 0 then
+        ist_weight := (r * t) / (r + t);
+    else
+        ist_weight := 0;
+    end if;
+    
+    abl_weight := abs(r - t);
+
+    # Multiply by the frequency for Valsartan and accumulate
+    freq := freqs[1];
+    index_values["M1^e"] := index_values["M1^e"] + m1_weight * freq;
+    index_values["M2^e"] := index_values["M2^e"] + m2_weight * freq;
+    index_values["GA^e"] := index_values["GA^e"] + ga_weight * freq;
+    index_values["ABC^e"] := index_values["ABC^e"] + abc_weight * freq;
+    index_values["χ^e"] := index_values["χ^e"] + chi_weight * freq;
+    index_values["IST^e"] := index_values["IST^e"] + ist_weight * freq;
+    index_values["ABL^e"] := index_values["ABL^e"] + abl_weight * freq;
+end do:
+
+# Print the results for Valsartan
+printf("Topological Indices for Valsartan:\n");
+index_names := ["M1^e", "M2^e", "GA^e", "ABC^e", "χ^e", "IST^e", "ABL^e"];
+for j from 1 to nops(index_names) do
+    idx_name := index_names[j];
+    printf("%s: %.6f\n", idx_name, index_values[idx_name]);
+end do: 
+
+
+printf("Topological Indices for Valsartan:\n");
+index_names := ["M1^e", "M2^e", "GA^e", "ABC^e", "&chi;^e", "IST^e", "ABL^e"];
+for j to nops(index_names) do
+    idx_name := index_names[j];
+    printf("%s: %.6f\n", idx_name, index_values[idx_name]);
+end do;
+
+restart;
+with(LinearAlgebra);
+with(ArrayTools);
+M_1e := 793;
+M_2e := 4749;
+GA_e := 33.969953;
+ABC_e := 13.601934;
+chi_e := 7.123505;
+IST_e := 197.913319;
+ABL_e := 31;
+#Experimental values taken from table 32
+MW_exp := 435.5;
+HAC_exp := 32;
+CO_exp := 608;
+BP_exp := 684.9;
+ENV_exp := 105.5;
+MR_exp := 120.6;
+PO_exp := 47.8;
+MV_exp := 359.1;
+#Regressions equations of overall best models for each property taken from the tables 8,11,14,17,20,23,27 and 30.
+predict_MW := proc(GAe) return 5.071009 + 14.940646*GAe + (-1)*0.051512*GAe^2; end proc;
+predict_HAC := proc(GAe) return 1.633191 + 0.898649*GAe; end proc;
+predict_CO := proc(ABCe) return 1464.609602 + (-1)*411.521528*ABCe + 41.322346*ABCe^2 + (-1)*1.136243*ABCe^3; end proc;
+predict_BP := proc(GAe) return -656.715103 + 366.999694*log(GAe); end proc;
+predict_ENV := proc(ABLe) return 77.561582 + (-1)*4.542787*ABLe + 0.286690*ABLe^2 + (-1)*0.003783*ABLe^3; end proc;
+predict_MR := proc(ABLe) return -81.059629 + 13.377086*ABLe + (-1)*0.333008*ABLe^2 + 0.003469*ABLe^3; end proc;
+predict_PO := proc(ABLe) return -32.110883 + 5.297975*ABLe + (-1)*0.131718*ABLe^2 + 0.001370*ABLe^3; end proc;
+predict_MV := proc(ABLe) return -476.702302 + 243.262764*log(ABLe); end proc;
+predict_CAD_drug_properties := proc(M_1e_val, M_2e_val, GA_e_val, ABC_e_val, chi_e_val, IST_e_val, ABL_e_val) local MW_pred, HAC_pred, CO_pred, BP_pred, ENV_pred, MR_pred, PO_pred, MV_pred; printf("Predicted Molecular Properties for Coronary Artery Disease Drug:\n"); printf("================================================================\n"); MW_pred := predict_MW(GA_e_val); HAC_pred := predict_HAC(GA_e_val); CO_pred := predict_CO(ABC_e_val); BP_pred := predict_BP(GA_e_val); ENV_pred := predict_ENV(ABL_e_val); MR_pred := predict_MR(ABL_e_val); PO_pred := predict_PO(ABL_e_val); MV_pred := predict_MV(ABL_e_val); printf("Molecular Weight: %.6f g/mol\n", MW_pred); printf("Heavy Atom Count: %.6f\n", HAC_pred); printf("Complexity: %.6f\n", CO_pred); printf("Boiling Point: %.6f °C\n", BP_pred); printf("Enthalpy of Vaporization: %.6f kJ/mol\n", ENV_pred); printf("Molar Refractivity: %.6f cm³/mol\n", MR_pred); printf("Polarizability: %.6f \n", PO_pred); printf("Molar Volume: %.6f cm³/mol\n", MV_pred); printf("================================================================\n"); return [MW_pred, HAC_pred, CO_pred, BP_pred, ENV_pred, MR_pred, PO_pred, MV_pred]; end proc;
+printf("Example prediction for Valsartan:\n");
+valsartan_predictions := predict_CAD_drug_properties(M_1e, M_2e, GA_e, ABC_e, chi_e, IST_e, ABL_e);
+printf("\nModel Validation for Valsartan:\n");
+printf("============================================================\n");
+MW_pred := predict_MW(GA_e);
+HAC_pred := predict_HAC(GA_e);
+CO_pred := predict_CO(ABC_e);
+BP_pred := predict_BP(GA_e);
+ENV_pred := predict_ENV(ABL_e);
+MR_pred := predict_MR(ABL_e);
+PO_pred := predict_PO(ABL_e);
+MV_pred := predict_MV(ABL_e);
+MW_MAE := abs(MW_pred - MW_exp);
+HAC_MAE := abs(HAC_pred - HAC_exp);
+CO_MAE := abs(CO_pred - CO_exp);
+BP_MAE := abs(BP_pred - BP_exp);
+ENV_MAE := abs(ENV_pred - ENV_exp);
+MR_MAE := abs(MR_pred - MR_exp);
+PO_MAE := abs(PO_pred - PO_exp);
+MV_MAE := abs(MV_pred - MV_exp);
+MW_RMSE := sqrt((MW_pred - MW_exp)^2);
+HAC_RMSE := sqrt((HAC_pred - HAC_exp)^2);
+CO_RMSE := sqrt((CO_pred - CO_exp)^2);
+BP_RMSE := sqrt((BP_pred - BP_exp)^2);
+ENV_RMSE := sqrt((ENV_pred - ENV_exp)^2);
+MR_RMSE := sqrt((MR_pred - MR_exp)^2);
+PO_RMSE := sqrt((PO_pred - PO_exp)^2);
+MV_RMSE := sqrt((MV_pred - MV_exp)^2);
+printf("Error Metrics for Individual Properties:\n");
+printf("Property       MAE          RMSE\n");
+printf("----------------------------------------\n");
+printf("MW:     %-12.6f %-12.6f\n", MW_MAE, MW_RMSE);
+printf("HAC:    %-12.6f %-12.6f\n", HAC_MAE, HAC_RMSE);
+printf("CO:     %-12.6f %-12.6f\n", CO_MAE, CO_RMSE);
+printf("BP:     %-12.6f %-12.6f\n", BP_MAE, BP_RMSE);
+printf("ENV:    %-12.6f %-12.6f\n", ENV_MAE, ENV_RMSE);
+printf("MR:     %-12.6f %-12.6f\n", MR_MAE, MR_RMSE);
+printf("PO:     %-12.6f %-12.6f\n", PO_MAE, PO_RMSE);
+printf("MV:     %-12.6f %-12.6f\n", MV_MAE, MV_RMSE);
+printf("============================================================\n\n");
+printf("Table 33: Experimental and Predicted Values for Valsartan\n");
+printf("==================================================================\n");
+printf("%-10s %-15s %-15s\n", "Property", "Experimental", "Predicted");
+printf("------------------------------------------------------------------\n");
+printf("%-10s %-15.1f %-15.6f\n", "MW", MW_exp, MW_pred);
+printf("%-10s %-15d %-15.6f\n", "HAC", HAC_exp, HAC_pred);
+printf("%-10s %-15d %-15.6f\n", "CO", CO_exp, CO_pred);
+printf("%-10s %-15.1f %-15.6f\n", "BP", BP_exp, BP_pred);
+printf("%-10s %-15.1f %-15.6f\n", "ENV", ENV_exp, ENV_pred);
+printf("%-10s %-15.1f %-15.6f\n", "MR", MR_exp, MR_pred);
+printf("%-10s %-15.1f %-15.6f\n", "PO", PO_exp, PO_pred);
+printf("%-10s %-15.1f %-15.6f\n", "MV", MV_exp, MV_pred);
+printf("==================================================================\n\n");
+printf("VERIFICATION INSTRUCTIONS:\n");
+printf("1. This code can be run in any Maple 2018+ environment\n");
+printf("2. No additional packages are required beyond the standard Maple library\n");
+printf("3. Copy and paste this code into a Maple worksheet and execute it\n");
+printf("4. Results should match Table 33 in the manuscript within rounding differences\n\n");
+printf("USAGE INSTRUCTIONS FOR Coronary-Artery-Disease-Drugs(CAD) DRUG PREDICTION:\n");
+printf("1. Calculate topological indices for your CAD drug using graph theory methods\n");
+printf("2. Call predict_CAD_drug_properties(M_1e, M_2e, GA_e, ABC_e, chi_e, IST_e, ABL_e)\n");
+printf("3. Replace the parameters with your drug's calculated topological indices\n");
+printf("4. The function returns predicted values for all 8 molecular properties\n");
+printf("5. Common CAD drugs include: Valsartan, Losartan, Atorvastatin, Simvastatin, etc.\n");
